@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Thai Alphabet Quest · Interactive Learning</title>
+  <meta name="description" content="Learn to recognise and pronounce every letter of the Thai alphabet through interactive games." />
+  <meta name="theme-color" content="#0f1226" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Thai Quest" />
+  <meta name="application-name" content="Thai Quest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo thai">ก</div>
+      <div>
+        <h1>Thai Alphabet Quest</h1>
+        <p>Recognise & pronounce all 44 consonants, vowels & tones — gamified.</p>
+      </div>
+    </div>
+    <div class="hud">
+      <div class="stat"><span>⭐</span><b id="xp">0</b><span class="lbl">XP</span></div>
+      <div class="stat"><span>✅</span><b id="known">0</b><span class="lbl">/ <span id="total">0</span> known</span></div>
+      <div class="stat"><span>🔥</span><b id="streak">0</b><span class="lbl">day streak</span></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- NAV -->
+    <nav class="nav">
+      <button data-screen="home" class="active">🏠 Home</button>
+      <button data-screen="ref">📖 Reference</button>
+      <button data-screen="flash">🎴 Flashcards</button>
+      <button data-screen="match">🔗 Matching</button>
+      <button data-screen="memory">🧠 Memory</button>
+      <button data-screen="sort">📚 Class Sort</button>
+      <button data-screen="quiz">❓ Quiz</button>
+      <button data-screen="pron">🎙 Pronounce</button>
+      <button data-screen="tones">🎵 Tones</button>
+    </nav>
+
+    <!-- HOME -->
+    <section id="home" class="screen active">
+      <h2 class="section-title">สวัสดีค่ะ — welcome!</h2>
+      <p class="section-sub">Built from your 49-day curriculum. Pick a game to start mastering the Thai alphabet.</p>
+      <div class="grid">
+        <div class="card" onclick="showScreen('flash')">
+          <div class="ch">🎴</div><div class="nm">Flashcards</div><div class="sd">Flip & learn each letter</div>
+        </div>
+        <div class="card" onclick="showScreen('match')">
+          <div class="ch">🔗</div><div class="nm">Matching</div><div class="sd">Pair letters with sounds</div>
+        </div>
+        <div class="card" onclick="showScreen('memory')">
+          <div class="ch">🧠</div><div class="nm">Memory</div><div class="sd">Find matching pairs</div>
+        </div>
+        <div class="card" onclick="showScreen('sort')">
+          <div class="ch">📚</div><div class="nm">Class Sort</div><div class="sd">Mid / High / Low class</div>
+        </div>
+        <div class="card" onclick="showScreen('quiz')">
+          <div class="ch">❓</div><div class="nm">Quiz</div><div class="sd">Sound, class & name test</div>
+        </div>
+        <div class="card" onclick="showScreen('pron')">
+          <div class="ch">🎙</div><div class="nm">Pronounce</div><div class="sd">Speak & get graded</div>
+        </div>
+        <div class="card" onclick="showScreen('tones')">
+          <div class="ch">🎵</div><div class="nm">Tones</div><div class="sd">Full tone-rule table</div>
+        </div>
+        <div class="card" onclick="showScreen('ref')">
+          <div class="ch">📖</div><div class="nm">Reference</div><div class="sd">Browse all 44 + vowels</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;background:var(--panel);border-radius:16px;padding:20px;">
+        <h3 style="margin:0 0 8px;">🎯 Your goal</h3>
+        <p style="margin:0;color:var(--muted);font-size:14px;">
+          Recognise every letter of the Thai alphabet and pronounce it well.
+          Each correct answer builds XP and marks letters as "known".
+          Focus first on the 20 most common consonants — they cover ~90% of daily text.
+        </p>
+      </div>
+    </section>
+
+    <!-- REFERENCE -->
+    <section id="ref" class="screen">
+      <h2 class="section-title">📖 Reference Chart</h2>
+      <p class="section-sub">All 44 consonants + 18 vowels. Tap any card to hear it.</p>
+      <div class="controls">
+        <select id="refFilter">
+          <option value="all">All</option>
+          <option value="mid">Mid class (9)</option>
+          <option value="high">High class (11)</option>
+          <option value="low">Low class (24)</option>
+          <option value="vowel">Vowels (18)</option>
+        </select>
+      </div>
+      <div id="refGrid" class="grid"></div>
+    </section>
+
+    <!-- FLASHCARDS -->
+    <section id="flash" class="screen">
+      <h2 class="section-title">🎴 Flashcards</h2>
+      <p class="section-sub">Tap the card to flip. Use ← → to navigate.</p>
+      <div class="controls">
+        <select id="fcFilter">
+          <option value="all">All consonants</option>
+          <option value="mid">Mid class</option>
+          <option value="high">High class</option>
+          <option value="low">Low class</option>
+          <option value="vowel">Vowels</option>
+        </select>
+        <button class="btn small" onclick="fcShuffle()">🔀 Shuffle</button>
+      </div>
+      <div class="flash-wrap">
+        <div class="flashcard" id="flashcard" onclick="fcFlip()">
+          <div class="fc-inner">
+            <div class="fc-face fc-front" id="fcFront"></div>
+            <div class="fc-face fc-back" id="fcBack"></div>
+          </div>
+        </div>
+        <div class="flash-nav">
+          <button class="btn" onclick="fcNext(-1)">← Prev</button>
+          <span class="count" id="fcCount">1 / 1</span>
+          <button class="btn primary" onclick="fcNext(1)">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MATCHING -->
+    <section id="match" class="screen">
+      <h2 class="section-title">🔗 Matching Game</h2>
+      <p class="section-sub">Match each Thai letter with its sound, name, or meaning.</p>
+      <div class="controls">
+        <select id="matchMode">
+          <option value="char-sound">Letter → Sound</option>
+          <option value="char-name" selected>Letter → Name</option>
+          <option value="word-mean">Word → Meaning</option>
+        </select>
+        <button class="btn small" onclick="startMatching()">🔄 New round</button>
+      </div>
+      <div class="progress-bar"><div class="fill" id="matchProgress"></div></div>
+      <div class="match-board">
+        <div class="match-col" id="matchLeft"></div>
+        <div class="match-col" id="matchRight"></div>
+      </div>
+    </section>
+
+    <!-- MEMORY -->
+    <section id="memory" class="screen">
+      <h2 class="section-title">🧠 Memory Pairs</h2>
+      <p class="section-sub">Find the letter ↔ name pairs. 8 pairs, 16 cards.</p>
+      <div class="controls">
+        <button class="btn small" onclick="startMemory()">🔄 New game</button>
+      </div>
+      <div class="memory-grid" id="memoryGrid"></div>
+    </section>
+
+    <!-- CLASS SORT -->
+    <section id="sort" class="screen">
+      <h2 class="section-title">📚 Class Sort</h2>
+      <p class="section-sub">Drag each letter into its tone class (or tap a letter, then tap a zone on mobile).</p>
+      <div class="sort-zones">
+        <div class="zone" data-cls="mid"><h3>🟦 Mid class</h3><div class="pile"></div></div>
+        <div class="zone" data-cls="high"><h3>🟨 High class</h3><div class="pile"></div></div>
+        <div class="zone" data-cls="low"><h3>🟥 Low class</h3><div class="pile"></div></div>
+      </div>
+      <div class="queue" id="sortQueue"></div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="screen">
+      <h2 class="section-title">❓ Quick Quiz</h2>
+      <p class="section-sub">Multiple-choice — hear each letter, pick the right answer.</p>
+      <div class="controls">
+        <select id="quizType">
+          <option value="sound" selected>Identify the sound</option>
+          <option value="class">Identify the class</option>
+          <option value="name">Identify the name</option>
+        </select>
+        <button class="btn small" onclick="startQuiz()">🔄 Restart</button>
+      </div>
+      <div id="quizArea"></div>
+    </section>
+
+    <!-- PRONUNCIATION -->
+    <section id="pron" class="screen">
+      <h2 class="section-title">🎙 Pronunciation Practice</h2>
+      <p class="section-sub">Listen, then repeat. Uses your browser's speech tools (Thai voice where available).</p>
+      <div class="controls">
+        <select id="pronMode">
+          <option value="letters" selected>Letters</option>
+          <option value="words">Short words</option>
+        </select>
+      </div>
+      <div id="pronArea"></div>
+      <p style="color:var(--muted);font-size:12px;margin-top:16px;">
+        Tip: on Chrome/Edge the mic grades your pronunciation against the target.
+        If your browser lacks Thai speech recognition, use 🔊 and repeat aloud.
+      </p>
+    </section>
+
+    <!-- TONES -->
+    <section id="tones" class="screen">
+      <h2 class="section-title">🎵 Tone Rules</h2>
+      <p class="section-sub">The complete tone system — class × tone mark = resulting tone.</p>
+      <div id="tonesTable"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <div class="install-banner" id="installBanner" style="display:none;">
+    <span>📱 <b>Install</b> — add to your home screen for the full app experience</span>
+    <button class="btn primary small" id="installBtn">Install</button>
+    <button class="btn small" id="dismissBtn" style="margin-left:4px;">×</button>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Register service worker for offline support
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(err => console.log("SW reg failed:", err));
+      });
+    }
+
+    // PWA install prompt
+    let deferredPrompt = null;
+    const banner = document.getElementById("installBanner");
+    const installBtn = document.getElementById("installBtn");
+    const dismissBtn = document.getElementById("dismissBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.style.display = "flex";
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      banner.style.display = "none";
+    });
+    dismissBtn.addEventListener("click", () => banner.style.display = "none");
+    window.addEventListener("appinstalled", () => { banner.style.display = "none"; });
+  </script>
+</body>
+</html>
