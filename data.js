@@ -55,24 +55,26 @@ const THAI_DATA = {
   ],
 
   vowels: [
-    { ch: "า", name: "Sara Aa", sound: "aa (long a)", memory: "Sits to the RIGHT of the consonant: กา = gaa.", words: [{thai:"กา",rom:"gaa",mean:"crow"},{thai:"มา",rom:"maa",mean:"come"}] },
-    { ch: "ิ", name: "Sara I", sound: "i (short)", memory: "Sits ABOVE the consonant: กิน = gin.", words: [{thai:"กิน",rom:"gin",mean:"eat"},{thai:"ดิน",rom:"din",mean:"soil"}] },
-    { ch: "ี", name: "Sara Ii", sound: "ii (long)", memory: "Sits ABOVE with a tail: ดี = dii.", words: [{thai:"ดี",rom:"dii",mean:"good"},{thai:"ปี",rom:"bpii",mean:"year"}] },
-    { ch: "ึ", name: "Sara Ue", sound: "ue (short)", memory: "Sits ABOVE: short unrounded 'uh' sound.", words: [{thai:"นึก",rom:"nuek",mean:"to think"}] },
-    { ch: "ื", name: "Sara Uue", sound: "uue (long)", memory: "Sits ABOVE with a following form: มือ = muue (hand).", words: [{thai:"มือ",rom:"muue",mean:"hand"},{thai:"ชื่อ",rom:"chue",mean:"name"}] },
-    { ch: "ะ", name: "Sara A", sound: "a (short)", memory: "Short a — like 'a' in 'cup'. Appears after the consonant.", words: [{thai:"กะ",rom:"ga",mean:"to estimate"}] },
-    { ch: "ั", name: "Mai Han Akat", sound: "a (short, above)", memory: "The above-written form of ะ — วัน = wan, กัน = gan.", words: [{thai:"วัน",rom:"wan",mean:"day"},{thai:"กัน",rom:"gan",mean:"together"}] },
-    { ch: "ุ", name: "Sara U", sound: "u (short)", memory: "Sits BELOW the consonant — คุณ = khun.", words: [{thai:"คุณ",rom:"khun",mean:"you"},{thai:"กุ้ง",rom:"gung",mean:"shrimp"}] },
-    { ch: "ู", name: "Sara Uu", sound: "uu (long)", memory: "Sits BELOW, longer form — รู้ = rúu (know).", words: [{thai:"รู้",rom:"ruu",mean:"to know"},{thai:"ดู",rom:"duu",mean:"to look"}] },
-    { ch: "เ", name: "Sara E", sound: "eh / ee", memory: "Sits BEFORE the consonant — เก = geh.", words: [{thai:"เก่า",rom:"gao",mean:"old"},{thai:"เดิน",rom:"deun",mean:"to walk"}] },
-    { ch: "แ", name: "Sara Ae", sound: "ae (as in 'cat')", memory: "Double เ — แม่ = mae (mother).", words: [{thai:"แม่",rom:"mae",mean:"mother"},{thai:"แพง",rom:"phaeng",mean:"expensive"}] },
-    { ch: "โ", name: "Sara O", sound: "oo (as in 'go')", memory: "Sits BEFORE — โรงแรม = hotel.", words: [{thai:"โต",rom:"dtoo",mean:"big/grow"}] },
-    { ch: "ไ", name: "Sara Ai", sound: "ai (as in 'Thai')", memory: "Sits BEFORE — ไป = bpai (go), ไม่ = mâi (not).", words: [{thai:"ไป",rom:"bpai",mean:"go"},{thai:"ไม่",rom:"mai",mean:"not"}] },
-    { ch: "ำ", name: "Sara Am", sound: "am", memory: "Sits after the consonant — น้ำ = náam (water), ทำ = tham.", words: [{thai:"น้ำ",rom:"naam",mean:"water"},{thai:"ทำ",rom:"tham",mean:"do"}] },
-    { ch: "เอีย", name: "Sara Ia", sound: "ia (ee-a)", memory: "เ before + ี above + ย after = เอีย.", words: [{thai:"เมีย",rom:"mia",mean:"wife"},{thai:"เรียน",rom:"rian",mean:"study"}] },
-    { ch: "เอือ", name: "Sara Uea", sound: "uea (ue-a)", memory: "เ before + ื above + อ after = เอือ.", words: [{thai:"เดือน",rom:"duuan",mean:"month"},{thai:"เมือง",rom:"muueang",mean:"city"}] },
-    { ch: "เา", name: "Sara Ao", sound: "ao", memory: "เ before + า right = เา.", words: [{thai:"เขา",rom:"khao",mean:"he/she"},{thai:"เรา",rom:"rao",mean:"we"}] },
-    { ch: "์", name: "Thanthakat", sound: "silent", memory: "This mark makes a consonant silent.", words: [{thai:"กษัตริย์",rom:"ga-sat",mean:"king"}] }
+    // NOTE: `display` shows the vowel with carrier อ so combining marks render correctly.
+    // `ch` keeps the pure vowel for matching/quiz logic.
+    { ch: "า", display: "อา", name: "Sara Aa", sound: "aa (long a)", memory: "Sits to the RIGHT of the consonant: กา = gaa.", words: [{thai:"กา",rom:"gaa",mean:"crow"},{thai:"มา",rom:"maa",mean:"come"}] },
+    { ch: "ิ", display: "อิ", name: "Sara I", sound: "i (short)", memory: "Sits ABOVE the consonant: กิน = gin.", words: [{thai:"กิน",rom:"gin",mean:"eat"},{thai:"ดิน",rom:"din",mean:"soil"}] },
+    { ch: "ี", display: "อี", name: "Sara Ii", sound: "ii (long)", memory: "Sits ABOVE with a tail: ดี = dii.", words: [{thai:"ดี",rom:"dii",mean:"good"},{thai:"ปี",rom:"bpii",mean:"year"}] },
+    { ch: "ึ", display: "อึ", name: "Sara Ue", sound: "ue (short)", memory: "Sits ABOVE: short unrounded 'uh' sound.", words: [{thai:"นึก",rom:"nuek",mean:"to think"}] },
+    { ch: "ื", display: "อื", name: "Sara Uue", sound: "uue (long)", memory: "Sits ABOVE with a following form: มือ = muue (hand).", words: [{thai:"มือ",rom:"muue",mean:"hand"},{thai:"ชื่อ",rom:"chue",mean:"name"}] },
+    { ch: "ะ", display: "อะ", name: "Sara A", sound: "a (short)", memory: "Short a — like 'a' in 'cup'. Appears after the consonant.", words: [{thai:"กะ",rom:"ga",mean:"to estimate"}] },
+    { ch: "ั", display: "อั", name: "Mai Han Akat", sound: "a (short, above)", memory: "The above-written form of ะ — วัน = wan, กัน = gan.", words: [{thai:"วัน",rom:"wan",mean:"day"},{thai:"กัน",rom:"gan",mean:"together"}] },
+    { ch: "ุ", display: "อุ", name: "Sara U", sound: "u (short)", memory: "Sits BELOW the consonant — คุณ = khun.", words: [{thai:"คุณ",rom:"khun",mean:"you"},{thai:"กุ้ง",rom:"gung",mean:"shrimp"}] },
+    { ch: "ู", display: "อู", name: "Sara Uu", sound: "uu (long)", memory: "Sits BELOW, longer form — รู้ = rúu (know).", words: [{thai:"รู้",rom:"ruu",mean:"to know"},{thai:"ดู",rom:"duu",mean:"to look"}] },
+    { ch: "เ", display: "เอ", name: "Sara E", sound: "eh / ee", memory: "Sits BEFORE the consonant — เก = geh.", words: [{thai:"เก่า",rom:"gao",mean:"old"},{thai:"เดิน",rom:"deun",mean:"to walk"}] },
+    { ch: "แ", display: "แอ", name: "Sara Ae", sound: "ae (as in 'cat')", memory: "Double เ — แม่ = mae (mother).", words: [{thai:"แม่",rom:"mae",mean:"mother"},{thai:"แพง",rom:"phaeng",mean:"expensive"}] },
+    { ch: "โ", display: "โอ", name: "Sara O", sound: "oo (as in 'go')", memory: "Sits BEFORE — โรงแรม = hotel.", words: [{thai:"โต",rom:"dtoo",mean:"big/grow"}] },
+    { ch: "ไ", display: "ไอ", name: "Sara Ai", sound: "ai (as in 'Thai')", memory: "Sits BEFORE — ไป = bpai (go), ไม่ = mâi (not).", words: [{thai:"ไป",rom:"bpai",mean:"go"},{thai:"ไม่",rom:"mai",mean:"not"}] },
+    { ch: "ำ", display: "อำ", name: "Sara Am", sound: "am", memory: "Sits after the consonant — น้ำ = náam (water), ทำ = tham.", words: [{thai:"น้ำ",rom:"naam",mean:"water"},{thai:"ทำ",rom:"tham",mean:"do"}] },
+    { ch: "เอีย", display: "เอีย", name: "Sara Ia", sound: "ia (ee-a)", memory: "เ before + ี above + ย after = เอีย.", words: [{thai:"เมีย",rom:"mia",mean:"wife"},{thai:"เรียน",rom:"rian",mean:"study"}] },
+    { ch: "เอือ", display: "เอือ", name: "Sara Uea", sound: "uea (ue-a)", memory: "เ before + ื above + อ after = เอือ.", words: [{thai:"เดือน",rom:"duuan",mean:"month"},{thai:"เมือง",rom:"muueang",mean:"city"}] },
+    { ch: "เา", display: "เ-า", name: "Sara Ao", sound: "ao", memory: "เ before + า right = เ-า (e.g. เขา = khao).", words: [{thai:"เขา",rom:"khao",mean:"he/she"},{thai:"เรา",rom:"rao",mean:"we"}] },
+    { ch: "์", display: "อ์", name: "Thanthakat", sound: "silent", memory: "This mark makes a consonant silent (karan).", words: [{thai:"กษัตริย์",rom:"ga-sat",mean:"king"}] }
   ],
 
   // Tone-class summary used by the "Class Sort" game and reference panel.

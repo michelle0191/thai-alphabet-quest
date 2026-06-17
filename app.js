@@ -99,14 +99,15 @@ function renderReference() {
   items.forEach(it => {
     const card = document.createElement("div");
     card.className = "card";
+    const shown = it.display || it.ch;   // vowels use carrier อ form
     card.innerHTML = `
-      <div class="ch thai">${it.ch}</div>
+      <div class="ch thai">${shown}</div>
       <div class="nm">${it.name}${it.rare ? ' <span class="badge rare" style="margin:0;">rare</span>' : ""}</div>
       <div class="sd">${it.sound}</div>
       <span class="badge ${it.cls}">${clsLabel[it.cls] || "Vowel"}</span>
     `;
     card.onclick = () => {
-      speak(it.ch);
+      speak(shown);
       toast(`${it.name} — ${it.sound}`, "");
     };
     wrap.appendChild(card);
@@ -135,17 +136,18 @@ function renderFlashcard() {
   const c = fcDeck[fcIdx];
   const card = $("#flashcard");
   card.classList.remove("flipped");
+  const shown = c.display || c.ch;       // vowels render with carrier อ
   const wordsHtml = (c.words || []).slice(0, 2).map(w =>
     `<div class="row"><b class="thai">${w.thai}</b> — ${w.rom} — ${w.mean}</div>`
   ).join("");
   $("#fcFront").innerHTML = `
     <span class="badge ${c.cls}">${clsLabel[c.cls] || "Vowel"}</span>
-    <div class="fc-char thai">${c.ch}</div>
+    <div class="fc-char thai">${shown}</div>
     <div class="fc-name">${c.name}</div>
   `;
   $("#fcBack").innerHTML = `
     <span class="badge ${c.cls}">${clsLabel[c.cls] || "Vowel"}</span>
-    <div class="fc-char thai" style="font-size:90px;">${c.ch}</div>
+    <div class="fc-char thai" style="font-size:90px;">${shown}</div>
     <div class="row"><b>Sound:</b> ${c.sound}</div>
     <div class="row" style="color:var(--muted);font-size:13px;">${c.memory}</div>
     ${wordsHtml}
@@ -171,9 +173,12 @@ function startMatching() {
       left: w.thai, right: w.mean, leftIsText: true
     }));
   } else {
-    const pool = shuffle(D.consonants.filter(c => !c.rare || Math.random() < 0.3)).slice(0, 6);
+    // Mix consonants + vowels so the game covers the full alphabet.
+    const cons  = D.consonants.filter(c => !c.rare || Math.random() < 0.3);
+    const vows  = D.vowels.filter(v => v.display);   // only vowels that have a display form
+    const pool  = shuffle([...cons, ...vows]).slice(0, 6);
     pairs = pool.map(c => ({
-      left: c.ch,
+      left: c.display || c.ch,                       // visible form (carrier for vowels)
       right: mode === "char-sound" ? c.sound : c.name,
       leftIsText: true
     }));
@@ -240,7 +245,10 @@ function onMatchClick(tile) {
 let memState = null;
 function startMemory() {
   const n = 8; // 8 pairs = 16 cards
-  const pool = shuffle(D.consonants.filter(c => !c.rare)).slice(0, n);
+  // Include vowels (using their visible display form) so memory covers the whole alphabet.
+  const cons = D.consonants.filter(c => !c.rare).map(c => ({ ch: c.ch, name: c.name }));
+  const vows = D.vowels.filter(v => v.display).map(v => ({ ch: v.display, name: v.name }));
+  const pool = shuffle([...cons, ...vows]).slice(0, n);
   const cards = [];
   pool.forEach((c, i) => {
     cards.push({ id: i, side: "ch", text: c.ch });
