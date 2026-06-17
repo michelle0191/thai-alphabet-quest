@@ -1,6 +1,6 @@
 /* Thai Alphabet Quest — Service Worker
    Enables offline use + installability */
-const CACHE = "thai-quest-v2";
+const CACHE = "thai-quest-v3";
 const ASSETS = [
   "./",
   "./index.html",

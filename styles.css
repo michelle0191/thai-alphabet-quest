@@ -31,9 +31,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Thai-friendly font stack for big characters */
+/* Thai-friendly font stack for big characters.
+   Sarabun = Thai government official body font (clean, legible).
+   Noto Serif Thai = traditional book-style Thai, great for letter study.
+   System fallbacks cover macOS (Sukhumvit/Thonburi) + Windows (Leelawadee). */
 .thai, .char {
-  font-family: "Noto Sans Thai", "Sukhumvit Set", "Thonburi", "Leelawadee UI", sans-serif;
+  font-family: "Sarabun", "Noto Serif Thai", "Noto Sans Thai",
+               "Sukhumvit Set", "Thonburi", "Leelawadee UI",
+               "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "kern" 1;
+  line-height: 1.6;              /* extra room for vowel/tone marks above & below */
 }
 
 /* ---------- Layout ---------- */
@@ -176,11 +183,10 @@ main { padding: 10px 28px 60px; max-width: 1200px; margin: 0 auto; }
 }
 .fc-char {
   font-size: 150px;
-  line-height: 1;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #fff, #cfd4ff);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 1.4;              /* taller line so marks above/below aren't clipped */
+  margin-bottom: 16px;
+  color: #ffffff;               /* solid colour — gradient text clips Thai marks */
+  text-shadow: 0 2px 12px rgba(0,0,0,.35);
 }
 .fc-name { font-size: 18px; color: var(--muted); }
 .fc-back .row { font-size: 15px; margin: 6px 0; }
