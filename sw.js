@@ -1,6 +1,8 @@
 /* Thai Alphabet Quest — Service Worker
-   Enables offline use + installability */
-const CACHE = "thai-quest-v3";
+   Enables offline use + installability.
+   Strategy: network-first for HTML/CSS/JS (so updates land instantly),
+   cache-first only for immutable assets (icons). */
+const CACHE = "thai-quest-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -14,44 +16,66 @@ const ASSETS = [
   "./icons/favicon-32.png"
 ];
 
-// Install: pre-cache the app shell
+// Install: pre-cache the app shell, then take over immediately
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate: clean up old caches
+// Activate: delete ALL old caches, claim all clients
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch: cache-first for app shell, network-first for others
+// Listen for "SKIP_WAITING" message from the page
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// Fetch: network-first for HTML/CSS/JS so updates are seen immediately;
+// cache-first for images/icons.
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-
-  // Only handle same-origin requests (let fonts/CDN pass through)
   if (url.origin !== self.location.origin) return;
 
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
+  const isAsset = /\.(?:css|js|html|json)$/.test(url.pathname) || url.pathname === "/" || url.pathname === "/";
+
+  if (isAsset) {
+    // Network-first: always check server for the latest version
+    e.respondWith(
+      fetch(req)
         .then((res) => {
-          // cache a copy of valid responses
           if (res && res.status === 200) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }
           return res;
         })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+        .catch(() => caches.match(req).then((c) => c || caches.match("./")))
+    );
+  } else {
+    // Cache-first for images/icons
+    e.respondWith(
+      caches.match(req).then((cached) =>
+        cached || fetch(req).then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+      )
+    );
+  }
 });

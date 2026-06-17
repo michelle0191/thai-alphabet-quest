@@ -226,10 +226,28 @@
   <script src="data.js"></script>
   <script src="app.js"></script>
   <script>
-    // Register service worker for offline support
+    // Register service worker for offline support + auto-update
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("sw.js").catch(err => console.log("SW reg failed:", err));
+        navigator.serviceWorker.register("sw.js").then(reg => {
+          // When a new SW takes over, reload once so the user gets the update
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (!window.__reloaded) {
+              window.__reloaded = true;
+              window.location.reload();
+            }
+          });
+          // If there's a waiting SW, force it to activate immediately
+          if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          reg.addEventListener("updatefound", () => {
+            const nw = reg.installing;
+            if (nw) nw.addEventListener("statechange", () => {
+              if (nw.state === "installed" && navigator.serviceWorker.controller) {
+                nw.postMessage({ type: "SKIP_WAITING" });
+              }
+            });
+          });
+        }).catch(err => console.log("SW reg failed:", err));
       });
     }
 
