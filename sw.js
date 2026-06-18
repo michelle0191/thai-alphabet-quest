@@ -2,7 +2,7 @@
    Enables offline use + installability.
    Strategy: network-first for HTML/CSS/JS (so updates land instantly),
    cache-first only for immutable assets (icons). */
-const CACHE = "thai-quest-v4";
+const CACHE = "thai-quest-v5";
 const ASSETS = [
   "./",
   "./index.html",
