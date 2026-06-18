@@ -1,18 +1,48 @@
 /* ===========================================================
    Thai Alphabet App — game logic
-   Built from the 49-day curriculum at
-   /Users/michelletinloi/.openclaw/workspace/thai-curriculum
+   Built from the 49-day curriculum
    =========================================================== */
 
-const D = window.THAI_DATA;
+/* ---------- Data validation (defensive: if data.js fails, app still loads) ---------- */
+const D = window.THAI_DATA || {};
+D.consonants = Array.isArray(D.consonants) ? D.consonants : [];
+D.vowels     = Array.isArray(D.vowels)     ? D.vowels     : [];
+D.allWords   = Array.isArray(D.allWords)   ? D.allWords   : [];
+D.tones      = Array.isArray(D.tones)      ? D.tones      : [];
+if (!D.consonants.length && !D.vowels.length) {
+  console.error("Thai data failed to load — running in degraded mode");
+}
 
 /* ---------- Helpers ---------- */
-const $  = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// null-safe query helper. Returns a Proxy over null so that
+// $(".missing").classList.add(...) etc. don't throw — they just no-op.
+const __noop = () => __safe;
+const __safe = new Proxy(function(){}, {
+  get: () => __safe,
+  apply: () => __safe,
+  set: () => true
+});
+const $ = (s, r = document) => {
+  try { return r.querySelector(s) || __safe; }
+  catch { return __safe; }
+};
+const $$ = (s, r = document) => { try { return Array.from(r.querySelectorAll(s)); } catch { return []; } };
+const shuffle = (arr) => { const a = Array.isArray(arr) ? [...arr] : []; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const sample = (arr, n) => shuffle(arr).slice(0, n);
 const rand = (n) => Math.floor(Math.random() * n);
 const clsLabel = { mid: "Mid", high: "High", low: "Low" };
+// Safe HTML escaper — prevents broken rendering if data contains <, >, & or "
+// Written with char codes to avoid HTML-entity mangling.
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, m => {
+  switch (m) {
+    case "&": return "\u0026amp;";
+    case "<": return "\u0026lt;";
+    case ">": return "\u0026gt;";
+    case '"': return "\u0026quot;";
+    case "'": return "\u0026#39;";
+    default:  return m;
+  }
+});
 
 // Persistent progress in localStorage
 const STORE_KEY = "thaiAppProgress_v1";
@@ -40,19 +70,24 @@ function toast(msg, type = "") {
   window.__toastT = setTimeout(() => el.className = "toast", 1400);
 }
 
-// Text-to-speech for pronunciation practice
+// Text-to-speech for pronunciation practice (wrapped in try/catch — some
+// browsers throw on cancel() or speak() if not fully ready)
 function speak(text, rate = 0.85, onend) {
-  if (!("speechSynthesis" in window)) { if (onend) onend(); return; }
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "th-TH";
-  u.rate = rate;
-  // prefer a Thai voice if available
-  const voices = window.speechSynthesis.getVoices();
-  const th = voices.find(v => /th/i.test(v.lang));
-  if (th) u.voice = th;
-  if (onend) u.onend = onend;
-  window.speechSynthesis.speak(u);
+  try {
+    if (!("speechSynthesis" in window)) { if (onend) onend(); return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "th-TH";
+    u.rate = rate;
+    const voices = window.speechSynthesis.getVoices();
+    const th = voices.find(v => /th/i.test(v.lang));
+    if (th) u.voice = th;
+    if (onend) u.onend = onend;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    console.warn("speak() failed:", e);
+    if (onend) try { onend(); } catch {}
+  }
 }
 if ("speechSynthesis" in window) window.speechSynthesis.onvoiceschanged = () => {};
 
@@ -401,12 +436,12 @@ function renderQuiz() {
     return;
   }
   const c = quizState.pool[quizState.idx];
-  let prompt, choose, key;
-  if (quizState.type === "sound")   { prompt = c.ch; key = c.sound; choose = D.consonants; }
-  if (quizState.type === "class")   { prompt = c.ch; key = c.cls;   choose = D.consonants; }
-  if (quizState.type === "name")    { prompt = c.ch; key = c.name;  choose = D.consonants; }
-  const opts = sample([...new Set([key, ...choose.filter(x => x[quizState.type === "class" ? "cls" : quizState.type].replace(/\s.*$/, "") === key.replace(/\s.*$/, "") ? (quizState.type === "class" ? x.cls : x[quizState.type]) : x[quizState.type === "class" ? "cls" : quizState.type])])], 4);
-  // simpler robust option builder:
+  let key;
+  if (quizState.type === "sound")   { key = c.sound; }
+  if (quizState.type === "class")   { key = c.cls;   }
+  if (quizState.type === "name")    { key = c.name;  }
+  const choose = D.consonants;
+  // Robust option builder:
   let options;
   if (quizState.type === "class") {
     options = shuffle(["mid", "high", "low"].map(k => ({ label: clsLabel[k], value: k })));
@@ -580,6 +615,18 @@ function renderTones() {
 /* =====================================================================
    WIRING
    ===================================================================== */
+// Global error handler — catches any uncaught error so the app keeps running
+// instead of freezing with a blank screen. Logs to console for debugging.
+window.addEventListener("error", (e) => {
+  console.error("Caught error:", e.error || e.message);
+  try { toast("Something went wrong — continuing", "bad"); } catch {}
+  return true; // prevent default
+});
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("Unhandled promise rejection:", e.reason);
+  e.preventDefault();
+});
+
 function init() {
   // nav
   $$(".nav button").forEach(b => b.addEventListener("click", () => showScreen(b.dataset.screen)));
@@ -612,4 +659,8 @@ function init() {
     renderHUD();
   }
 }
-document.addEventListener("DOMContentLoaded", init);
+// Boot — wrap in try/catch so a failure in init() still shows the app shell
+document.addEventListener("DOMContentLoaded", () => {
+  try { init(); }
+  catch (e) { console.error("init() failed:", e); }
+});
