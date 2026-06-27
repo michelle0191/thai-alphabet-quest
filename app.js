@@ -73,21 +73,30 @@ function toast(msg, type = "") {
 // Text-to-speech for pronunciation practice (wrapped in try/catch — some
 // browsers throw on cancel() or speak() if not fully ready)
 function speak(text, rate = 0.85, onend) {
-  try {
-    if (!("speechSynthesis" in window)) { if (onend) onend(); return; }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "th-TH";
-    u.rate = rate;
-    const voices = window.speechSynthesis.getVoices();
-    const th = voices.find(v => /th/i.test(v.lang));
-    if (th) u.voice = th;
-    if (onend) u.onend = onend;
-    window.speechSynthesis.speak(u);
-  } catch (e) {
-    console.warn("speak() failed:", e);
-    if (onend) try { onend(); } catch {}
-  }
+  // Try pre-generated audio file first (works on ALL devices, no voice install needed)
+  const audioUrl = "audio/" + encodeURIComponent(text) + ".mp3";
+  const audio = new Audio(audioUrl);
+  audio.playbackRate = rate || 0.85;
+  audio.onended = () => { if (onend) onend(); };
+  audio.onerror = () => {
+    // Fall back to browser TTS if audio file is missing
+    try {
+      if (!("speechSynthesis" in window)) { if (onend) onend(); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "th-TH";
+      u.rate = rate;
+      const voices = window.speechSynthesis.getVoices();
+      const th = voices.find(v => /th/i.test(v.lang));
+      if (th) u.voice = th;
+      if (onend) u.onend = onend;
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      console.warn("speak() fallback failed:", e);
+      if (onend) try { onend(); } catch {}
+    }
+  };
+  audio.play().catch(() => audio.onerror());
 }
 if ("speechSynthesis" in window) window.speechSynthesis.onvoiceschanged = () => {};
 
