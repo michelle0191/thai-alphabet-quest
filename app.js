@@ -218,6 +218,7 @@ function startMatching() {
       leftIsText: true
     }));
   }
+  pairs = pairs.map((p, i) => ({ ...p, pairId: i }));
   const left = shuffle(pairs);
   const right = shuffle(pairs);
   matchState = { left, right, selected: null, done: 0, total: pairs.length, mode };
@@ -226,15 +227,16 @@ function startMatching() {
 function renderMatching() {
   const left = $("#matchLeft"), right = $("#matchRight");
   left.innerHTML = ""; right.innerHTML = "";
-  matchState.left.forEach((p, i) => left.appendChild(matchTile(p.left, "L" + i, p.leftIsText)));
-  matchState.right.forEach((p, i) => right.appendChild(matchTile(p.right, "R" + i, !p.leftIsText)));
+  matchState.left.forEach((p, i) => left.appendChild(matchTile(p.left, "L" + i, p.leftIsText, p.pairId)));
+  matchState.right.forEach((p, i) => right.appendChild(matchTile(p.right, "R" + i, !p.leftIsText, p.pairId)));
   $("#matchProgress").style.width = (matchState.done / matchState.total * 100) + "%";
 }
-function matchTile(content, id, big) {
+function matchTile(content, id, big, pairId) {
   const t = document.createElement("div");
   t.className = "match-tile";
   t.dataset.id = id;
   t.dataset.content = content;
+  t.dataset.pair = pairId;
   t.innerHTML = `<div class="${big ? "big thai" : "sub"}">${content}</div>`;
   t.onclick = () => onMatchClick(t);
   return t;
@@ -255,8 +257,8 @@ function onMatchClick(tile) {
     matchState.selected = tile;
     return;
   }
-  // check match
-  if (tile.dataset.content === matchState.selected.dataset.content) {
+  // check match — compare pairId, not content (left & right tiles show different strings)
+  if (tile.dataset.pair === matchState.selected.dataset.pair) {
     tile.classList.add("correct"); matchState.selected.classList.add("correct");
     matchState.done++;
     bumpXP(5);
@@ -653,7 +655,8 @@ function init() {
   // streak: if visited yesterday, increment
   const today = new Date().toDateString();
   if (progress.lastDay !== today) {
-    progress.streak += 1;
+    const yesterday = new Date(Date.now() - 864e5).toDateString();
+    progress.streak = (progress.lastDay === yesterday) ? (progress.streak + 1) : 1;
     progress.lastDay = today;
     store.save(progress);
     renderHUD();
