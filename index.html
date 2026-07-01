@@ -49,6 +49,7 @@
       <button data-screen="quiz">❓ Quiz</button>
       <button data-screen="pron">🎙 Pronounce</button>
       <button data-screen="tones">🎵 Tones</button>
+      <button data-screen="vowels" style="background:var(--accent-2);font-weight:700;">🔤 Vowels</button>
     </nav>
 
     <!-- HOME -->
@@ -214,6 +215,71 @@
       <h2 class="section-title">🎵 Tone Rules</h2>
       <p class="section-sub">The complete tone system — class × tone mark = resulting tone.</p>
       <div id="tonesTable"></div>
+    </section>
+
+    <!-- VOWELS HUB -->
+    <section id="vowels" class="screen">
+      <h2 class="section-title">🔤 Vowel Mastery</h2>
+      <p class="section-sub">Thai has 18 vowel forms with 3 writing positions. Master them here.</p>
+
+      <!-- Sub-nav for vowel games -->
+      <div class="controls" style="gap:8px;">
+        <button class="btn small active" data-vtab="chart" onclick="showVowelTab('chart')">📋 Position Chart</button>
+        <button class="btn small" data-vtab="pairs" onclick="showVowelTab('pairs')">⚡ Short ↔ Long</button>
+        <button class="btn small" data-vtab="vflash" onclick="showVowelTab('vflash')">🎴 Flashcards</button>
+        <button class="btn small" data-vtab="vquiz" onclick="showVowelTab('vquiz')">❓ Vowel Quiz</button>
+      </div>
+
+      <!-- Vowel position chart -->
+      <div id="vTab-chart" class="vtab-panel">
+        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">
+          Vowels are written <b>above</b>, <b>below</b>, <b>before</b>, or <b>after</b> the consonant — sometimes surrounding it on multiple sides. Tap any card to hear it.
+        </p>
+        <div id="vowelPosGrid"></div>
+      </div>
+
+      <!-- Short ↔ Long pairs drill -->
+      <div id="vTab-pairs" class="vtab-panel" style="display:none;">
+        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">
+          Every short vowel has a long counterpart. The vowel length changes the word's meaning! Match each short vowel with its long form.
+        </p>
+        <div class="progress-bar"><div class="fill" id="vPairProgress"></div></div>
+        <div id="vPairBoard"></div>
+      </div>
+
+      <!-- Vowel flashcards -->
+      <div id="vTab-vflash" class="vtab-panel" style="display:none;">
+        <div class="flash-wrap">
+          <div class="flashcard" id="vFlashcard" onclick="vFlashFlip()">
+            <div class="fc-inner">
+              <div class="fc-face fc-front" id="vFcFront"></div>
+              <div class="fc-face fc-back" id="vFcBack"></div>
+            </div>
+          </div>
+          <div class="flash-nav">
+            <button class="btn" onclick="vFlashNext(-1)">← Prev</button>
+            <span class="count" id="vFcCount">1 / 1</span>
+            <button class="btn primary" onclick="vFlashNext(1)">Next →</button>
+          </div>
+          <div style="text-align:center;margin-top:8px;">
+            <button class="btn small" onclick="vFlashShuffle()">🔀 Shuffle</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vowel quiz -->
+      <div id="vTab-vquiz" class="vtab-panel" style="display:none;">
+        <div class="controls">
+          <select id="vQuizType">
+            <option value="sound" selected>Identify the sound</option>
+            <option value="name">Identify the name</option>
+            <option value="length">Short or Long?</option>
+            <option value="position">Where is it written?</option>
+          </select>
+          <button class="btn small" onclick="startVowelQuiz()">🔄 Restart</button>
+        </div>
+        <div id="vQuizArea"></div>
+      </div>
     </section>
   </main>
 

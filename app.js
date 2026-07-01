@@ -113,6 +113,7 @@ function showScreen(id) {
   if (id === "quiz") startQuiz();
   if (id === "pron") startPron();
   if (id === "tones") renderTones();
+  if (id === "vowels") showVowelTab("chart");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -624,7 +625,260 @@ function renderTones() {
 }
 
 /* =====================================================================
-   WIRING
+   9. VOWEL MASTERY SECTION
+   ===================================================================== */
+
+/* Position metadata for labels */
+const VOWEL_POS = {
+  above:   { label: "Above", icon: "⬆️", desc: "Written above the consonant" },
+  below:   { label: "Below", icon: "⬇️", desc: "Written below the consonant" },
+  before:  { label: "Before", icon: "⬅️", desc: "Written before (to the left of) the consonant" },
+  after:   { label: "After", icon: "➡️", desc: "Written after (to the right of) the consonant" },
+  complex: { label: "Around", icon: "🔄", desc: "Wraps around the consonant (multiple sides)" }
+};
+
+/* --- Tab switching --- */
+function showVowelTab(tab) {
+  $$(".vtab-panel").forEach(p => p.style.display = "none");
+  $("#vTab-" + tab).style.display = "";
+  $$("[data-vtab]").forEach(b => b.classList.toggle("active", b.dataset.vtab === tab));
+  if (tab === "chart") renderVowelChart();
+  if (tab === "pairs") startVowelPairs();
+  if (tab === "vflash") renderVowelFlash();
+  if (tab === "vquiz") startVowelQuiz();
+}
+
+/* --- 9a. Vowel Position Chart --- */
+function renderVowelChart() {
+  const wrap = $("#vowelPosGrid");
+  wrap.innerHTML = "";
+  const positions = ["above", "below", "before", "after", "complex"];
+  positions.forEach(pos => {
+    const items = D.vowels.filter(v => v.position === pos);
+    if (!items.length) return;
+    const section = document.createElement("div");
+    section.className = "vowel-pos-section";
+    section.innerHTML = `
+      <div class="vowel-pos-header">
+        <span class="vowel-pos-icon">${VOWEL_POS[pos].icon}</span>
+        <span class="vowel-pos-label">${VOWEL_POS[pos].label}</span>
+        <span class="vowel-pos-count">${items.length}</span>
+      </div>
+      <div class="vowel-pos-cards"></div>
+    `;
+    const cardsWrap = section.querySelector(".vowel-pos-cards");
+    items.forEach(v => {
+      const card = document.createElement("div");
+      card.className = "card vowel-card";
+      const lenBadge = v.length === "short"
+        ? '<span class="badge vlen-short">short</span>'
+        : v.length === "long"
+        ? '<span class="badge vlen-long">long</span>'
+        : '';
+      card.innerHTML = `
+        <div class="ch thai">${v.display}</div>
+        <div class="nm">${v.name}</div>
+        <div class="sd">${v.sound}</div>
+        ${lenBadge}
+      `;
+      card.onclick = () => {
+        speak(v.display);
+        toast(`${v.name} — ${v.sound}`, "");
+      };
+      cardsWrap.appendChild(card);
+    });
+    wrap.appendChild(section);
+  });
+}
+
+/* --- 9b. Short ↔ Long Pairs Drill --- */
+let vPairState = null;
+function startVowelPairs() {
+  // Build pairs from data: find all short vowels that have a pair
+  const shortVows = D.vowels.filter(v => v.length === "short" && v.pair);
+  const pairs = shortVows.map(sv => {
+    const lv = D.vowels.find(v => v.ch === sv.pair);
+    return { short: sv, long: lv, pairId: sv.ch + "-" + (lv ? lv.ch : "?") };
+  }).filter(p => p.long); // only keep pairs where both sides exist
+
+  pairs.forEach((p, i) => { p.pairId = i; });
+  const left = shuffle(pairs.map(p => ({ ...p.short, side: "short", pairId: p.pairId })));
+  const right = shuffle(pairs.map(p => ({ ...p.long, side: "long", pairId: p.pairId })));
+  vPairState = { left, right, selected: null, done: 0, total: pairs.length };
+  renderVowelPairs();
+}
+function renderVowelPairs() {
+  const board = $("#vPairBoard");
+  board.innerHTML = "";
+  const leftCol = document.createElement("div");
+  const rightCol = document.createElement("div");
+  leftCol.className = "match-board";
+  leftCol.innerHTML = '<div class="match-col" id="vPairLeft"></div><div class="match-col" id="vPairRight"></div>';
+  board.appendChild(leftCol);
+
+  const left = $("#vPairLeft"), right = $("#vPairRight");
+  vPairState.left.forEach((v, i) => left.appendChild(vPairTile(v, "L" + i)));
+  vPairState.right.forEach((v, i) => right.appendChild(vPairTile(v, "R" + i)));
+  $("#vPairProgress").style.width = (vPairState.done / vPairState.total * 100) + "%";
+}
+function vPairTile(v, id) {
+  const t = document.createElement("div");
+  t.className = "match-tile";
+  t.dataset.id = id;
+  t.dataset.pair = v.pairId;
+  t.innerHTML = `<div class="big thai">${v.display}</div><div class="sub">${v.name}<br><span class="badge ${v.length === 'short' ? 'vlen-short' : 'vlen-long'}">${v.length}</span></div>`;
+  t.onclick = () => onVPairClick(t);
+  return t;
+}
+function onVPairClick(tile) {
+  if (tile.classList.contains("correct")) return;
+  if (!vPairState.selected) {
+    tile.classList.add("selected");
+    vPairState.selected = tile;
+    return;
+  }
+  if (tile === vPairState.selected) { tile.classList.remove("selected"); vPairState.selected = null; return; }
+  const sameCol = tile.dataset.id[0] === vPairState.selected.dataset.id[0];
+  if (sameCol) {
+    vPairState.selected.classList.remove("selected");
+    tile.classList.add("selected");
+    vPairState.selected = tile;
+    return;
+  }
+  if (tile.dataset.pair === vPairState.selected.dataset.pair) {
+    tile.classList.add("correct"); vPairState.selected.classList.add("correct");
+    vPairState.done++;
+    bumpXP(5);
+    toast("✓ Correct pair! +5", "good");
+    speak(vPairState.selected.querySelector(".big").textContent);
+    if (vPairState.done === vPairState.total) {
+      setTimeout(() => { bumpXP(15); toast("All pairs matched! +15 🎉", "good"); }, 400);
+    }
+  } else {
+    tile.classList.add("wrong"); vPairState.selected.classList.add("wrong");
+    bumpXP(1);
+    setTimeout(() => { tile.classList.remove("wrong"); vPairState.selected.classList.remove("wrong"); }, 500);
+  }
+  $("#vPairProgress").style.width = (vPairState.done / vPairState.total * 100) + "%";
+  vPairState.selected = null;
+}
+
+/* --- 9c. Vowel Flashcards --- */
+let vFcDeck = [];
+let vFcIdx = 0;
+function buildVowelFlashDeck() {
+  vFcDeck = shuffle(D.vowels.filter(v => v.display).slice());
+  vFcIdx = 0;
+}
+function renderVowelFlash() {
+  if (!vFcDeck.length || vFcIdx >= vFcDeck.length) { buildVowelFlashDeck(); vFcIdx = 0; }
+  if (!vFcDeck.length) return;
+  const v = vFcDeck[vFcIdx];
+  $("#vFlashcard").classList.remove("flipped");
+  const wordsHtml = (v.words || []).slice(0, 2).map(w =>
+    `<div class="row"><b class="thai">${w.thai}</b> — ${w.rom} — ${w.mean}</div>`
+  ).join("");
+  const lenBadge = v.length === "short" ? '<span class="badge vlen-short">short</span>'
+    : v.length === "long" ? '<span class="badge vlen-long">long</span>'
+    : '<span class="badge vowel">single</span>';
+  const posLabel = VOWEL_POS[v.position] ? VOWEL_POS[v.position].label : v.position;
+  $("#vFcFront").innerHTML = `
+    <span class="badge vowel">Vowel</span>
+    <div class="fc-char thai">${v.display}</div>
+    <div class="fc-name">${v.name}</div>
+  `;
+  $("#vFcBack").innerHTML = `
+    <span class="badge vowel">Vowel</span>
+    <div class="fc-char thai" style="font-size:80px;">${v.display}</div>
+    <div class="row"><b>Sound:</b> ${v.sound}</div>
+    <div class="row">${lenBadge} <span class="badge vowel" style="margin-left:4px;">${posLabel}</span></div>
+    <div class="row" style="color:var(--muted);font-size:13px;">${v.memory}</div>
+    ${wordsHtml}
+  `;
+  $("#vFcCount").textContent = `${vFcIdx + 1} / ${vFcDeck.length}`;
+}
+function vFlashFlip() { $("#vFlashcard").classList.toggle("flipped"); bumpXP(1); }
+function vFlashNext(dir) { vFcIdx = (vFcIdx + dir + vFcDeck.length) % vFcDeck.length; renderVowelFlash(); }
+function vFlashShuffle() { buildVowelFlashDeck(); renderVowelFlash(); toast("Shuffled 🔀"); }
+
+/* --- 9d. Vowel Quiz --- */
+let vQuizState = null;
+function startVowelQuiz() {
+  const type = $("#vQuizType").value;
+  const pool = shuffle(D.vowels.filter(v => v.display && v.name !== "Thanthakat"));
+  vQuizState = { type, pool, idx: 0, score: 0 };
+  renderVowelQuiz();
+}
+function renderVowelQuiz() {
+  const wrap = $("#vQuizArea");
+  if (!vQuizState || vQuizState.idx >= vQuizState.pool.length) {
+    const pct = vQuizState ? Math.round(vQuizState.score / vQuizState.pool.length * 100) : 0;
+    const stars = pct >= 90 ? "⭐⭐⭐" : pct >= 70 ? "⭐⭐" : pct >= 50 ? "⭐" : "💪";
+    wrap.innerHTML = `
+      <div class="result-box">
+        <div class="stars">${stars}</div>
+        <div class="score">${vQuizState.score} / ${vQuizState.pool.length}</div>
+        <p style="color:var(--muted);">${pct}% correct</p>
+        <button class="btn primary" onclick="startVowelQuiz()">Play again</button>
+      </div>`;
+    bumpXP(vQuizState.score * 3);
+    return;
+  }
+  const v = vQuizState.pool[vQuizState.idx];
+  let key, questionText;
+  if (vQuizState.type === "sound")    { key = v.sound; questionText = "What sound does this vowel make?"; }
+  if (vQuizState.type === "name")     { key = v.name; questionText = "What is this vowel called?"; }
+  if (vQuizState.type === "length")   { key = v.length; questionText = "Is this vowel short or long?"; }
+  if (vQuizState.type === "position") { key = v.position; questionText = "Where is this vowel written?"; }
+
+  let options;
+  if (vQuizState.type === "length") {
+    options = shuffle([{ label: "Short", value: "short", correct: true }, { label: "Long", value: "long" }, { label: "Single (no pair)", value: "single" }]);
+    // Fix correct flag after shuffle
+    options.forEach(o => { o.correct = (o.value === key); });
+  } else if (vQuizState.type === "position") {
+    const allPos = ["above", "below", "before", "after", "complex"];
+    const distractors = shuffle(allPos.filter(p => p !== key)).slice(0, 3);
+    options = [{ label: VOWEL_POS[key].label, value: key, correct: true }];
+    distractors.forEach(p => options.push({ label: VOWEL_POS[p].label, value: p }));
+    options = shuffle(options);
+  } else {
+    const field = vQuizState.type;
+    const distractors = shuffle(D.vowels.filter(x => x[field] !== key && x.display)).slice(0, 3);
+    options = shuffle([{ label: key, value: key, correct: true }, ...distractors.map(x => ({ label: x[field], value: x[field] }))]);
+  }
+  options = options.slice(0, 4);
+  if (!options.find(o => o.value === key)) options[0] = { label: key, value: key, correct: true };
+
+  wrap.innerHTML = `
+    <div class="progress-bar"><div class="fill" style="width:${vQuizState.idx / vQuizState.pool.length * 100}%"></div></div>
+    <div class="quiz-prompt">
+      <div class="big thai">${v.display}</div>
+      <div class="q">${questionText}</div>
+      <button class="btn small" onclick="speak('${v.display}')">🔊 Hear it</button>
+    </div>
+    <div class="choices">
+      ${options.map((o, i) => `<div class="choice" data-i="${i}" data-v="${esc(o.value)}">${esc(o.label)}</div>`).join("")}
+    </div>
+    <p style="text-align:center;color:var(--muted);margin-top:14px;font-size:13px;">Tap to answer · ${vQuizState.idx + 1} of ${vQuizState.pool.length}</p>
+  `;
+  $$("#vQuizArea .choice").forEach(el => el.onclick = () => onVowelQuizAnswer(el, key, v));
+}
+function onVowelQuizAnswer(el, key, v) {
+  const correct = el.dataset.v === key;
+  $$("#vQuizArea .choice").forEach(o => {
+    o.style.pointerEvents = "none";
+    if (o.dataset.v === key) o.classList.add("correct");
+  });
+  if (!correct) el.classList.add("wrong");
+  if (correct) { vQuizState.score++; toast("✓ Correct!", "good"); markKnown(v.ch, true); }
+  else { toast(`Answer: ${key}`, "bad"); markKnown(v.ch, false); }
+  speak(v.display);
+  setTimeout(() => { vQuizState.idx++; renderVowelQuiz(); }, 1000);
+}
+
+/* =====================================================================
+   WIRING & INIT
    ===================================================================== */
 // Global error handler — catches any uncaught error so the app keeps running
 // instead of freezing with a blank screen. Logs to console for debugging.
@@ -647,6 +901,7 @@ function init() {
   $("#matchMode").addEventListener("change", startMatching);
   $("#quizType").addEventListener("change", startQuiz);
   $("#pronMode").addEventListener("change", pronNext);
+  $("#vQuizType").addEventListener("change", startVowelQuiz);
   // expose for inline handlers
   window.speak = speak;
   window.fcFlip = fcFlip;
@@ -657,6 +912,12 @@ function init() {
   window.startMatching = startMatching;
   window.startMemory = startMemory;
   window.showScreen = showScreen;
+  // vowel section
+  window.showVowelTab = showVowelTab;
+  window.vFlashFlip = vFlashFlip;
+  window.vFlashNext = vFlashNext;
+  window.vFlashShuffle = vFlashShuffle;
+  window.startVowelQuiz = startVowelQuiz;
   // init
   setupSortZones();
   renderHUD();

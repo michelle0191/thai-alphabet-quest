@@ -525,3 +525,101 @@ table.tones td.ch { font-size: 20px; }
 }
 .install-banner span { flex: 1; font-size: 13px; color: var(--text); }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* ---------- Vowel Section ---------- */
+/* Sub-tab buttons */
+[data-vtab] {
+  border: 1px solid rgba(162,155,254,.3) !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+[data-vtab].active {
+  background: rgba(162,155,254,.2) !important;
+  color: var(--vowel) !important;
+  border-color: var(--vowel) !important;
+}
+
+/* Vowel position chart sections */
+.vowel-pos-section {
+  margin-bottom: 20px;
+}
+.vowel-pos-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.vowel-pos-icon { font-size: 18px; }
+.vowel-pos-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vowel);
+}
+.vowel-pos-count {
+  background: rgba(162,155,254,.15);
+  color: var(--vowel);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.vowel-pos-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+/* Vowel length badges */
+.badge.vlen-short {
+  background: rgba(255,159,67,.18);
+  color: #ff9f43;
+}
+.badge.vlen-long {
+  background: rgba(46,204,113,.18);
+  color: var(--good);
+}
+
+/* Vowel card styling */
+.vowel-card {
+  text-align: center;
+  border: 1px solid rgba(162,155,254,.15);
+}
+.vowel-card .ch {
+  font-size: 36px;
+}
+
+/* Vowel pair tiles — slightly more compact */
+#vPairBoard .match-tile {
+  min-height: 80px;
+}
+#vPairBoard .match-tile .big {
+  font-size: 28px;
+}
+#vPairBoard .match-tile .sub {
+  font-size: 11px;
+  line-height: 1.4;
+}
+#vPairBoard .match-tile .sub .badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  margin-top: 3px;
+}
+
+/* Vowel flashcard specific */
+#vFlashcard .fc-char {
+  font-size: 72px;
+}
+
+/* Vowel quiz — reuse .quiz-prompt / .choices from consonant quiz */
+#vQuizArea .quiz-prompt .big {
+  font-size: 56px;
+}
+
+/* Responsive: single column for pairs on mobile */
+@media (max-width: 600px) {
+  .vowel-pos-cards {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
